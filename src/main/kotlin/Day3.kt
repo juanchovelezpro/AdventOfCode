@@ -12,7 +12,6 @@ fun main() {
 fun sumPartNumbersEngineSchematic(lines: List<String>): Int {
     val schematic = buildSchematic(lines)
     val partNumbers = mutableListOf<Int>()
-
     var number = ""
     var firstIndex = -1
     var lastIndex = -1
@@ -70,55 +69,32 @@ fun sumGearRatios(lines: List<String>): Int {
 fun getNeighbors(
     schematic: Array<Array<String>>,
     row: Int,
-    numberFirstIndex: Int,
-    numberLastIndex: Int
+    start: Int,
+    end: Int
 ): List<Neighbor> {
 
     val neighbors = mutableListOf<Neighbor>()
 
-    val hasUp = row != 0
-    val hasDown = row != schematic.size - 1
-    val hasLeft = numberFirstIndex != 0
-    val hasRight = numberLastIndex != schematic[0].size - 1
+    val directions = arrayOf(1, -1, 1, -1) // Up, Down, Right, Left
 
-    if (hasUp) {
-        var aux = numberFirstIndex
-        while (aux <= numberLastIndex) {
-            neighbors.add(Neighbor(row - 1, aux, schematic[row - 1][aux]))
-            aux++
+    val startFixed = if (start - 1 < 0) 0 else start - 1
+    val endFixed = if (end + 1 > schematic[0].lastIndex) end else end + 1
+
+    for (index in directions.indices) {
+        if (index == 0 || index == 1) {
+            val x = row + directions[index]
+            if (x in 0..schematic.lastIndex) {
+                val range = startFixed..endFixed
+                var aux = range.first
+                while (aux in range) {
+                    neighbors.add(Neighbor(x, aux, schematic[x][aux]))
+                    aux++
+                }
+            }
+        } else {
+            val y = if (index == 2) endFixed else startFixed
+            neighbors.add(Neighbor(row, y, schematic[row][y]))
         }
-    }
-
-    if (hasDown) {
-        var aux = numberFirstIndex
-        while (aux <= numberLastIndex) {
-            neighbors.add(Neighbor(row + 1, aux, schematic[row + 1][aux]))
-            aux++
-        }
-    }
-
-    if (hasRight) {
-        neighbors.add(Neighbor(row, numberLastIndex + 1, schematic[row][numberLastIndex + 1]))
-    }
-
-    if (hasLeft) {
-        neighbors.add(Neighbor(row, numberFirstIndex - 1, schematic[row][numberFirstIndex - 1]))
-    }
-
-    if (hasUp && hasLeft) {
-        neighbors.add(Neighbor(row - 1, numberFirstIndex - 1, schematic[row - 1][numberFirstIndex - 1]))
-    }
-
-    if (hasUp && hasRight) {
-        neighbors.add(Neighbor(row - 1, numberLastIndex + 1, schematic[row - 1][numberLastIndex + 1]))
-    }
-
-    if (hasDown && hasLeft) {
-        neighbors.add(Neighbor(row + 1, numberFirstIndex - 1, schematic[row + 1][numberFirstIndex - 1]))
-    }
-
-    if (hasDown && hasRight) {
-        neighbors.add(Neighbor(row + 1, numberLastIndex + 1, schematic[row + 1][numberLastIndex + 1]))
     }
 
     return neighbors
@@ -127,81 +103,38 @@ fun getNeighbors(
 fun getNumbersNeighborsGear(
     schematic: Array<Array<Neighbor>>,
     row: Int,
-    numberFirstIndex: Int,
-    numberLastIndex: Int
+    start: Int,
+    end: Int
 ): List<Int> {
 
     val numbers = mutableListOf<Int>()
+    val directions = arrayOf(1, -1, 1, -1) // Up, Down, Right, Left
 
-    val hasUp = row != 0
-    val hasDown = row != schematic.size - 1
-    val hasLeft = numberFirstIndex != 0
-    val hasRight = numberLastIndex != schematic[0].size - 1
+    val startFixed = if (start - 1 < 0) 0 else start - 1
+    val endFixed = if (end + 1 > schematic[0].lastIndex) end else end + 1
 
-    if (hasUp) {
-        var aux = numberFirstIndex
-        while (aux <= numberLastIndex) {
-            val current = schematic[row - 1][aux]
-            if (!current.visited && current.content[0].isDigit()) {
-                numbers.add(buildNumber(schematic, row - 1, aux))
+    for (index in directions.indices) {
+        if (index == 0 || index == 1) {
+            val x = row + directions[index]
+            if (x in 0..schematic.lastIndex) {
+                val range = startFixed..endFixed
+                var aux = range.first
+                while (aux in range) {
+                    val current = schematic[x][aux]
+                    if (!current.visited && current.content[0].isDigit()) {
+                        numbers.add(buildNumber(schematic, x, aux))
+                    }
+                    aux++
+                }
             }
-            aux++
-        }
-    }
-
-    if (hasDown) {
-        var aux = numberFirstIndex
-        while (aux <= numberLastIndex) {
-            val current = schematic[row + 1][aux]
+        } else {
+            val y = if (index == 2) endFixed else startFixed
+            val current = schematic[row][y]
             if (!current.visited && current.content[0].isDigit()) {
-                numbers.add(buildNumber(schematic, row + 1, aux))
+                numbers.add(buildNumber(schematic, row, y))
             }
-            aux++
         }
     }
-
-    if (hasRight) {
-        val current = schematic[row][numberLastIndex + 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row, numberLastIndex + 1))
-        }
-    }
-
-    if (hasLeft) {
-        val current = schematic[row][numberFirstIndex - 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row, numberFirstIndex - 1))
-        }
-    }
-
-    if (hasUp && hasLeft) {
-        val current = schematic[row - 1][numberFirstIndex - 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row - 1, numberFirstIndex - 1))
-        }
-    }
-
-    if (hasUp && hasRight) {
-        val current = schematic[row - 1][numberLastIndex + 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row - 1, numberLastIndex + 1))
-        }
-    }
-
-    if (hasDown && hasLeft) {
-        val current = schematic[row + 1][numberFirstIndex - 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row + 1, numberFirstIndex - 1))
-        }
-    }
-
-    if (hasDown && hasRight) {
-        val current = schematic[row + 1][numberLastIndex + 1]
-        if (!current.visited && current.content[0].isDigit()) {
-            numbers.add(buildNumber(schematic, row + 1, numberLastIndex + 1))
-        }
-    }
-
     return numbers
 }
 
@@ -241,22 +174,6 @@ fun buildNumber(schematic: Array<Array<Neighbor>>, row: Int, col: Int): Int {
     list.forEach { number += it }
 
     return number.toInt()
-}
-
-fun String.detectNumbers(): List<Int> {
-    val numbers = mutableListOf<Int>()
-    var number = ""
-    for (char in this) {
-        if (char.isDigit()) {
-            number += char
-        } else {
-            if (number != "") {
-                numbers.add(number.toInt())
-                number = ""
-            }
-        }
-    }
-    return numbers
 }
 
 fun buildSchematic(lines: List<String>): Array<Array<String>> {
