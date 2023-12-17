@@ -11,28 +11,10 @@ fun main() {
 
 fun trebuchet(lines: List<String>): Int {
     val numbers = arrayListOf<Int>()
-
     for (line in lines) {
-        var indexOneFound = -1
-        var indexTwoFound = -1
-        var numberOne = ""
-        var numberTwo = ""
-        for ((index, value) in line.withIndex()) {
-            numberOne = if (value.isDigit()) {
-                indexOneFound = index
-                value.toString()
-            } else ""
-            if (indexOneFound != -1) break
-        }
-        for ((index, value) in line.withIndex().reversed()) {
-            numberTwo = if (value.isDigit()) {
-                indexTwoFound = index
-                value.toString()
-            } else ""
-            if (indexTwoFound != -1) break
-        }
-        val number = "$numberOne$numberTwo".toInt()
-        numbers.add(number)
+        val first = findDigit(line)
+        val second = findDigit(line.reversed())
+        numbers.add("$first$second".toInt())
     }
     return numbers.sum()
 }
@@ -50,102 +32,35 @@ fun trebuchetPartTwo(lines: List<String>): Int {
         Pair("nine", 9)
     )
 
-    val numbers = arrayListOf<Int>()
+    var sum = 0
+
+    val possibleOptions = mutableListOf<String>()
+    for ((k, v) in mapNumbers.entries) {
+        possibleOptions.add(k)
+        possibleOptions.add(v.toString())
+    }
 
     for (line in lines) {
+        val first = line.findAnyOf(possibleOptions)?.second!!
+        val second = line.findLastAnyOf(possibleOptions)?.second!!
 
-        val firstNumberAsDigit = firstNumberAsDigit(line)
-        val firstNumberAsText = firstNumberAsText(line, mapNumbers)
-        val lastNumberAsDigit = lastNumberAsDigit(line)
-        val lastNumberAsText = lastNumberAsText(line, mapNumbers)
+        val firstValue = if (first.length > 1) mapNumbers[first] else first
+        val secondValue = if (second.length > 1) mapNumbers[second] else second
 
-        val first = when {
-            firstNumberAsDigit == null -> firstNumberAsText?.second
-            firstNumberAsText == null -> firstNumberAsDigit.second
-            else -> {
-                if (firstNumberAsDigit.first < firstNumberAsText.first) firstNumberAsDigit.second else firstNumberAsText.second
-            }
-        }
+        sum += "$firstValue$secondValue".toInt()
 
-        val second = when {
-            lastNumberAsDigit == null -> lastNumberAsText?.second
-            lastNumberAsText == null -> lastNumberAsDigit.second
-            else -> {
-                if (lastNumberAsDigit.first > lastNumberAsText.first) lastNumberAsDigit.second else lastNumberAsText.second
-            }
-        }
-        numbers.add("$first$second".toInt())
     }
 
-    return numbers.sum()
+    return sum
 }
 
-fun firstNumberAsDigit(text: String): Pair<Int, Int>? {
-    var foundAt = -1
-    var numberFound = -1
-    for ((index, char) in text.withIndex()) {
+fun findDigit(text: String): Int {
+    var number = -1
+    for (char in text) {
         if (char.isDigit()) {
-            foundAt = index
-            numberFound = char.digitToInt()
+            number = char.digitToInt()
             break
         }
     }
-    if (foundAt == -1) return null
-    return Pair(foundAt, numberFound)
-}
-
-fun lastNumberAsDigit(text: String): Pair<Int, Int>? {
-    var foundAt = -1
-    var numberFound = -1
-    for ((index, char) in text.withIndex().reversed()) {
-        if (char.isDigit()) {
-            foundAt = index
-            numberFound = char.digitToInt()
-            break
-        }
-    }
-    if (foundAt == -1) return null
-    return Pair(foundAt, numberFound)
-}
-
-fun firstNumberAsText(text: String, mapNumbers: Map<String, Int>): Pair<Int, Int>? {
-    val foundAt = mutableMapOf<String, Int>()
-    for (number in mapNumbers.keys) {
-        val index = text.indexOf(number)
-        if (index != -1) foundAt[number] = index
-    }
-
-    if (foundAt.isEmpty()) return null
-
-    var min = Int.MAX_VALUE
-    var numberFound = -1
-    for (keyPairs in foundAt.entries) {
-        if (keyPairs.value < min) {
-            min = keyPairs.value
-            numberFound = mapNumbers[keyPairs.key] ?: -1
-        }
-    }
-
-    return Pair(min, numberFound)
-}
-
-fun lastNumberAsText(text: String, mapNumbers: Map<String, Int>): Pair<Int, Int>? {
-    val foundAt = mutableMapOf<String, Int>()
-    for (number in mapNumbers.keys) {
-        val index = text.lastIndexOf(number)
-        if (index != -1) foundAt[number] = index
-    }
-
-    if (foundAt.isEmpty()) return null
-
-    var max = -1
-    var numberFound = -1
-    for (keyPairs in foundAt.entries) {
-        if (keyPairs.value > max) {
-            max = keyPairs.value
-            numberFound = mapNumbers[keyPairs.key] ?: -1
-        }
-    }
-
-    return Pair(max, numberFound)
+    return number
 }
