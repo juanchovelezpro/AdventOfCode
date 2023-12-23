@@ -15,7 +15,6 @@ fun totalWinnings(lines: List<String>, withJoker: Boolean = false): Long {
     var totalWinnings: Long = 0
     val hands = getHands(lines, withJoker)
     hands.sort()
-    println(hands)
 
     for ((index, hand) in hands.withIndex()) {
         totalWinnings += hand.bid * (index + 1)
