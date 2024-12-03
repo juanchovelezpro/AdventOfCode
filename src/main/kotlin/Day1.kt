@@ -1,30 +1,62 @@
 package juanchovelezpro
 
+import kotlin.math.abs
+
 fun main() {
     val lines = readInput("day1.txt")
-    println(findFloorForSanta(lines[0]))
-    println(findCharPositionToEnterBasement(lines[0]))
+    print(day1(lines))
 }
 
-fun findFloorForSanta(instructions: String): Int {
-    var floor = 0
-    for(instruction in instructions){
-        if(instruction == '(') floor++
-        else floor--
-    }
-    return floor
-}
+fun day1(input: List<String>) {
 
-fun findCharPositionToEnterBasement(instructions: String): Int{
-    var floor = 0
-    var index = 0
-    for(instruction in instructions){
-        if(instruction == '(') floor++
-        else floor--
-        if(floor == -1) break
-        index++
+    val left = mutableListOf<Int>()
+    val right = mutableListOf<Int>()
+
+    for (numbers in input) {
+        val split = numbers.split("   ")
+        left.add(split[0].toInt())
+        right.add(split[1].toInt())
     }
 
-    return index+1
+    left.sort()
+    right.sort()
+
+    println(totalDistance(left, right))
+    println(similarityScore(left, right))
+
 }
+
+
+fun totalDistance(left: List<Int>, right: List<Int>): Int {
+    var totalDistance = 0
+    for (x in left.indices) {
+        totalDistance += abs(left[x] - right[x])
+    }
+
+    return totalDistance
+}
+
+fun similarityScore(left: List<Int>, right: List<Int>): Int {
+
+    val mapTimes = mutableMapOf<Int, Int>()
+    var similarity = 0
+
+    for (x in left) {
+        if (!mapTimes.contains(x))
+            mapTimes[x] = 0
+    }
+
+    for (i in right) {
+        if (mapTimes.contains(i))
+            mapTimes[i] = mapTimes[i]!! + 1
+    }
+
+    for (i in left) {
+        similarity += i * mapTimes[i]!!
+    }
+
+    return similarity
+
+}
+
 
