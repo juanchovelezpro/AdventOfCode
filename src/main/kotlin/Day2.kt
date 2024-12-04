@@ -8,14 +8,15 @@ fun main() {
     println(safeReportsWithTolerationCount(lines))
 }
 
-fun reports(lines: List<String>): List<Report>{
+fun reports(lines: List<String>): List<Report> {
     val reports = mutableListOf<Report>()
-
+    var counter = 1
     for (line in lines) {
         val levels = line.split(" ").map {
             it.toInt()
         }
-        reports.add(Report(levels))
+        reports.add(Report(levels, counter))
+        counter++
     }
     return reports
 }
@@ -37,16 +38,16 @@ fun safeReportsWithTolerationCount(lines: List<String>): Int {
     var safeReports = 0
 
     for (report in reports) {
-        if(report.isSafeWithToleration()) safeReports++
+        if (report.isSafeWithToleration()) safeReports++
     }
     return safeReports
 }
 
-class Report(val levels: List<Int>) {
+class Report(val levels: List<Int>, val id: Int) {
 
     fun isSafe(pLevels: List<Int> = listOf<Int>()): Boolean {
 
-        val theLevels = if(pLevels.isNotEmpty()) pLevels else levels
+        val theLevels = if (pLevels.isNotEmpty()) pLevels else levels
 
         var safe = true
         var increasing = false
@@ -83,8 +84,6 @@ class Report(val levels: List<Int>) {
             if (levels[i] == levels[i + 1]) equalsPairs.add(i to i + 1)
         }
 
-        println("Inc: ${increasing.size}, Dec: ${decreasing.size}, Eq: ${equalsPairs.size}, diff: ${differPairs.size} ")
-
         val allSituations = mutableListOf<Situation>(
             Situation("inc", increasing),
             Situation("dec", decreasing),
@@ -93,49 +92,36 @@ class Report(val levels: List<Int>) {
         )
 
         val situations = allSituations.filter { it.pairs.isNotEmpty() }
-
-        if (situations.size > 2) safe = false
-        else if (situations.size == 1) {
+        val situationsSorted = situations.sortedBy { it.pairs.size }
+        if (situations.size > 2) {
+            val firstFix = situationsSorted[0]
+            val secondFix = situationsSorted[1]
+            safe = tryFix(firstFix) || tryFix(secondFix)
+        } else if (situations.size == 1 && situations[0].id != "eq") {
             safe = true
         } else if (situations.size == 2) {
-            val situationsSorted = situations.sortedBy { it.pairs.size }
             val toFix = situationsSorted[0]
-            val levelsCopy = mutableListOf<Int>()
-            levelsCopy.addAll(levels)
-            if(toFix.pairs.size > 1) safe = false
-            else {
-                when(toFix.id){
-                    "inc" -> {
-                        levelsCopy.removeAt(toFix.pairs[0].first)
-                        safe = isSafe(levelsCopy)
-                    }
-                    "dec" -> {
-                        levelsCopy.removeAt(toFix.pairs[0].second)
-                        safe = isSafe(levelsCopy)
-                    }
-                    "eq" -> {
-                        levelsCopy.removeAt(toFix.pairs[0].first)
-                        safe = isSafe(levelsCopy)
-                    }
-                    "diff" -> {
-                        val rightCopy = mutableListOf<Int>()
-                        rightCopy.addAll(levels)
-
-                        levelsCopy.removeAt(toFix.pairs[0].first)
-                        val removeLeft = isSafe(levelsCopy)
-
-                        rightCopy.removeAt(toFix.pairs[0].second)
-                        val removeRight = isSafe(rightCopy)
-
-                        if(removeLeft == false && removeRight == false) return false
-                    }
-                }
-
-            }
+            safe = tryFix(toFix)
         }
-
+        println("Inc: ${increasing.size}, Dec: ${decreasing.size}, Eq: ${equalsPairs.size}, diff: ${differPairs.size} safe: $safe ")
         return safe
+    }
 
+    fun tryFix(toFix: Situation): Boolean {
+        var safe = true
+        val leftCopy = mutableListOf<Int>()
+        leftCopy.addAll(levels)
+        val rightCopy = mutableListOf<Int>()
+        rightCopy.addAll(levels)
+        if (toFix.pairs.size > 1) safe = false
+        else {
+            leftCopy.removeAt(toFix.pairs[0].first)
+            val removeLeft = isSafe(leftCopy)
+            rightCopy.removeAt(toFix.pairs[0].second)
+            val removeRight = isSafe(rightCopy)
+            safe = removeRight || removeLeft
+        }
+        return safe
     }
 }
 
